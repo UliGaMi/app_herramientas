@@ -12,7 +12,7 @@ class SpeechTextScreen extends StatefulWidget {
 class _SpeechTextScreenState extends State<SpeechTextScreen> {
   late stt.SpeechToText _speech;
   bool _isListening = false;
-  String _text = 'Presiona el botón y empieza a hablar...';
+  String _text = 'Press the button and start speaking...';
   FlutterTts _flutterTts = FlutterTts();
 
   @override
@@ -21,7 +21,7 @@ class _SpeechTextScreenState extends State<SpeechTextScreen> {
     _speech = stt.SpeechToText();
   }
 
-  // Función para iniciar el reconocimiento de voz en español
+  // Función para iniciar el reconocimiento de voz en inglés
   void _listen() async {
     if (!_isListening) {
       bool available = await _speech.initialize(
@@ -33,9 +33,12 @@ class _SpeechTextScreenState extends State<SpeechTextScreen> {
         onError: (error) => print('Error: $error'),
       );
       if (available) {
-        setState(() => _isListening = true);
+        setState(() {
+          _isListening = true;
+          _text = '';  // Limpiar el texto antes de empezar a dictar
+        });
         _speech.listen(
-          localeId: 'es_ES',  // Cambia el idioma a español (España)
+          localeId: 'en_US',  // Cambia el idioma a inglés (EE.UU.)
           onResult: (result) {
             setState(() {
               _text = result.recognizedWords;
@@ -49,9 +52,9 @@ class _SpeechTextScreenState extends State<SpeechTextScreen> {
     }
   }
 
-  // Función para leer el texto en voz alta en español
+  // Función para leer el texto en voz alta en inglés
   Future<void> _speak() async {
-    await _flutterTts.setLanguage('es-ES');  // Configurar la voz en español
+    await _flutterTts.setLanguage('en-US');  // Configurar la voz en inglés (EE.UU.)
     await _flutterTts.speak(_text);
   }
 
@@ -59,7 +62,7 @@ class _SpeechTextScreenState extends State<SpeechTextScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Dictado y Lectura de Texto'),
+        title: const Text('Speech to Text and Text to Speech'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -73,7 +76,7 @@ class _SpeechTextScreenState extends State<SpeechTextScreen> {
               readOnly: true,
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
-                labelText: 'Texto dictado',
+                labelText: 'Recognized Text',
               ),
             ),
             const SizedBox(height: 20),
@@ -81,14 +84,14 @@ class _SpeechTextScreenState extends State<SpeechTextScreen> {
             ElevatedButton.icon(
               onPressed: _listen,
               icon: Icon(_isListening ? Icons.mic_off : Icons.mic),
-              label: Text(_isListening ? 'Detener Dictado' : 'Empezar a Dictar'),
+              label: Text(_isListening ? 'Stop Listening' : 'Start Listening'),
             ),
             const SizedBox(height: 20),
             // Botón para que lea el texto en voz alta
             ElevatedButton.icon(
               onPressed: _speak,
               icon: Icon(Icons.volume_up),
-              label: Text('Leer en Voz Alta'),
+              label: Text('Read Aloud'),
             ),
           ],
         ),
@@ -96,5 +99,6 @@ class _SpeechTextScreenState extends State<SpeechTextScreen> {
     );
   }
 }
+
 
 
