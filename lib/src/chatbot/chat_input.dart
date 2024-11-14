@@ -42,10 +42,10 @@ class _ChatInputState extends State<ChatInput> {
       if (available) {
         setState(() => _isListening = true);
         _speech.listen(
-          localeId: 'en_US', // Aseguramos que el reconocimiento de voz sea en inglés
+          localeId: 'en_US', // Configurado en inglés
           onResult: (result) {
             if (result.finalResult) {
-              widget.onVoiceInput(result.recognizedWords);
+              widget.controller.text = result.recognizedWords; // Actualiza el campo de texto sin enviar
               _speech.stop();
               setState(() => _isListening = false);
             }
@@ -75,7 +75,7 @@ class _ChatInputState extends State<ChatInput> {
               ),
               decoration: InputDecoration(
                 contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                 filled: true,
                 fillColor: Theme.of(context).brightness == Brightness.dark
                     ? Colors.grey[800]
@@ -137,3 +137,4 @@ class _ChatInputState extends State<ChatInput> {
     );
   }
 }
+

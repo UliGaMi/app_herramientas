@@ -1,4 +1,3 @@
-// lib/src/chat_screen.dart
 import 'package:flutter/material.dart';
 import 'chatbot/chat_input.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -20,29 +19,20 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
 
+  // Número de mensajes de contexto que se guardarán
+  final int _messageHistoryLimit = 3;
+
   // Lista de mensajes actuales
   List<Map<String, dynamic>> _messages = [];
 
   // Lista para almacenar el historial de mensajes que será enviado a la API
   List<Map<String, String>> _chatHistory = [];
 
-  // Límite de mensajes en el historial para evitar el envío de demasiados tokens
-  final int _messageHistoryLimit = 1;
-
   // Instancia de FlutterTts
   final FlutterTts _flutterTts = FlutterTts();
 
-  // Lista de voces disponibles
-  List<dynamic> _voices = [];
-
-  // Estado para indicar si el modo de voz está activo
-  bool _voiceModeActive = false;
-
   // Estado para indicar si se está obteniendo una respuesta
   bool _isFetchingResponse = false;
-
-  // Voz seleccionada
-  String? _selectedVoice;
 
   @override
   void initState() {
@@ -53,45 +43,10 @@ class _ChatScreenState extends State<ChatScreen> {
 
     // Configurar FlutterTts
     _initializeTts();
-
-    // Agregar listeners para FlutterTts
-    _flutterTts.setStartHandler(() {
-      setState(() {
-        _voiceModeActive = true;
-      });
-    });
-
-    _flutterTts.setCompletionHandler(() {
-      setState(() {
-        _voiceModeActive = false;
-      });
-    });
-
-    _flutterTts.setErrorHandler((msg) {
-      setState(() {
-        _voiceModeActive = false;
-      });
-    });
   }
 
   Future<void> _initializeTts() async {
-    // Obtener todas las voces disponibles
-    _voices = await _flutterTts.getVoices;
-
-    // Seleccionar una voz específica por defecto (inglés)
-    var selectedVoice = _voices.firstWhere(
-        (voice) => voice['locale'].toString().contains('en-US'),
-        orElse: () => null);
-
-    if (selectedVoice != null) {
-      await _flutterTts.setVoice({
-        "name": selectedVoice['name'],
-        "locale": selectedVoice['locale']
-      });
-      _selectedVoice = selectedVoice['name'];
-    }
-
-    await _flutterTts.setLanguage("en-US"); // Inglés
+    await _flutterTts.setLanguage("en-US"); // Configurado en inglés
     await _flutterTts.setPitch(1.2); // Ajusta el tono
     await _flutterTts.setSpeechRate(0.5); // Ajusta la velocidad
     await _flutterTts.setVolume(1.0); // Asegura que el volumen esté al máximo
@@ -107,17 +62,15 @@ class _ChatScreenState extends State<ChatScreen> {
     final text = voiceText ?? _controller.text;
     if (text.isEmpty) return;
 
-    // Indicar que se está procesando la solicitud
     setState(() {
       _isFetchingResponse = true;
       _messages.add({'text': text, 'isUser': true});
       _chatHistory.add({'role': 'user', 'content': text});
     });
 
-    // Limitar el historial a los últimos mensajes
+    // Limitar el historial a los últimos mensajes, multiplicado por 2 para usuario y asistente
     if (_chatHistory.length > _messageHistoryLimit * 2) {
-      _chatHistory.removeRange(
-          0, _chatHistory.length - _messageHistoryLimit * 2);
+      _chatHistory.removeRange(0, _chatHistory.length - _messageHistoryLimit * 2);
     }
 
     if (voiceText == null) {
@@ -130,13 +83,10 @@ class _ChatScreenState extends State<ChatScreen> {
     setState(() {
       _messages.add({'text': response, 'isUser': false});
       _chatHistory.add({'role': 'assistant', 'content': response});
-      _isFetchingResponse = false; // Finalizar el estado de carga
+      _isFetchingResponse = false;
     });
 
-    // Condicionalmente reproducir la respuesta si fue enviada por voz
-    if (voiceText != null) {
-      await _speak(response);
-    }
+    await _speak(response);
   }
 
   Future<String> _getChatGPTResponse() async {
@@ -171,75 +121,12 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _speak(String text) async {
-    if (_selectedVoice != null) {
-      var voice = _voices.firstWhere(
-          (voice) => voice['name'] == _selectedVoice,
-          orElse: () => null);
-      if (voice != null) {
-        await _flutterTts.setVoice({
-          "name": voice['name'],
-          "locale": voice['locale']
-        });
-      }
-    }
-
-    setState(() {
-      _voiceModeActive = true;
-    });
-
-    _flutterTts.setErrorHandler((msg) {
-      print("Error de TTS: $msg");
-      setState(() {
-        _voiceModeActive = false;
-      });
-    });
-
     await _flutterTts.speak(text);
   }
 
+  // Función intermedia para manejar el input de voz
   void _handleVoiceInput(String voiceText) {
     _sendMessage(voiceText: voiceText);
-  }
-
-  // Función para mostrar un diálogo con las voces disponibles
-  void _showVoiceSelectionDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Seleccionar Voz'),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: _voices.length,
-              itemBuilder: (context, index) {
-                var voice = _voices[index];
-                return ListTile(
-                  title: Text("${voice['name']} (${voice['locale']})"),
-                  onTap: () async {
-                    await _flutterTts.setVoice({
-                      "name": voice['name'],
-                      "locale": voice['locale']
-                    });
-                    setState(() {
-                      _selectedVoice = voice['name'];
-                    });
-                    Navigator.of(context).pop();
-                  },
-                );
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancelar'),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   @override
@@ -254,13 +141,6 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Chat'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.voice_over_off),
-            onPressed: _showVoiceSelectionDialog,
-            tooltip: 'Seleccionar Voz',
-          ),
-        ],
       ),
       body: Stack(
         children: [
@@ -274,11 +154,11 @@ class _ChatScreenState extends State<ChatScreen> {
                     final message = _messages[index];
                     final messageBackground = message['isUser']
                         ? Theme.of(context).brightness == Brightness.dark
-                            ? Colors.blue[300]
-                            : Colors.blue[100]
+                        ? Colors.blue[300]
+                        : Colors.blue[100]
                         : Theme.of(context).brightness == Brightness.dark
-                            ? Colors.grey[700]
-                            : Colors.grey[300];
+                        ? Colors.grey[700]
+                        : Colors.grey[300];
 
                     return ListTile(
                       title: Align(
@@ -302,7 +182,7 @@ class _ChatScreenState extends State<ChatScreen> {
               ChatInput(
                 controller: _controller,
                 onSend: () => _sendMessage(),
-                onVoiceInput: _handleVoiceInput,
+                onVoiceInput: _handleVoiceInput, // Usa la función intermedia
               ),
             ],
           ),
@@ -331,41 +211,11 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
               ),
             ),
-          // Superposición para indicar modo de voz activo
-          if (_voiceModeActive)
-            Container(
-              color: Colors.black54,
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SpinKitWave(
-                      color: Colors.white,
-                      size: 50.0,
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      'Modo Voz Activo',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'Escuchando...',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
         ],
       ),
     );
   }
 }
+
+
+

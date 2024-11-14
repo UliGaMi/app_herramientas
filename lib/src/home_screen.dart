@@ -1,10 +1,6 @@
-// lib/src/home_screen.dart
 import 'package:flutter/material.dart';
-import 'gps_screen.dart';
-import 'qr_scanner_screen.dart';
-import 'sensor_screen.dart';
-import 'speech_text_screen.dart';  // Importa la nueva vista
-import 'package:url_launcher/url_launcher.dart';  // Importa la librería para abrir enlaces
+import 'chat_screen.dart'; // Importa la vista de chat como SpeechTextScreen en lugar de speech_text_screen.dart
+import 'package:url_launcher/url_launcher.dart'; // Importa la librería para abrir enlaces
 
 class HomeScreen extends StatefulWidget {
   static const routeName = '/home';
@@ -20,11 +16,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Lista de pantallas para el BottomNavigationBar
   static List<Widget> _screens = [
-    StudentInfoScreen(),  // Página de información del alumno
-    SpeechTextScreen(),  // Nueva vista de dictado y lectura de texto
-    GPSScreen(),
-    QRScannerScreen(),
-    SensorScreen(),
+    const StudentInfoScreen(), // Página de información del alumno
+    const ChatScreen(), // Vista del Chat con Speech to Text y Text to Speech
   ];
 
   void _onItemTapped(int index) {
@@ -37,9 +30,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('App del Estudiante'),
+        title: const Text('ChatBot'),
       ),
-      body: _screens[_selectedIndex],  // Mostrar la pantalla según el índice seleccionado
+      body: _screens[_selectedIndex], // Mostrar la pantalla según el índice seleccionado
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -48,25 +41,13 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.mic),
-            label: 'Dictado',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.location_on),
-            label: 'GPS',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.qr_code_scanner),
-            label: 'QR',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.sensors),
-            label: 'Sensores',
+            label: 'Chat',
           ),
         ],
-        currentIndex: _selectedIndex,  // Índice seleccionado actualmente
-        selectedItemColor: Colors.blue,  // Color para el ítem seleccionado (azul)
-        unselectedItemColor: Colors.grey,  // Color para los ítems no seleccionados (gris)
-        onTap: _onItemTapped,  // Cambiar de pantalla al seleccionar un ítem
+        currentIndex: _selectedIndex, // Índice seleccionado actualmente
+        selectedItemColor: Colors.blue, // Color para el ítem seleccionado (azul)
+        unselectedItemColor: Colors.grey, // Color para los ítems no seleccionados (gris)
+        onTap: _onItemTapped, // Cambiar de pantalla al seleccionar un ítem
       ),
     );
   }
@@ -134,7 +115,7 @@ class StudentInfoScreen extends StatelessWidget {
           const SizedBox(height: 16),
           // Botón para ver el repositorio
           ElevatedButton(
-            onPressed: _launchURL,  // Llama a la función que abre el enlace
+            onPressed: _launchURL, // Llama a la función que abre el enlace
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
               shape: RoundedRectangleBorder(
@@ -151,6 +132,7 @@ class StudentInfoScreen extends StatelessWidget {
     );
   }
 }
+
 
 
 

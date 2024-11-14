@@ -30,7 +30,7 @@ class _SensorScreenState extends State<SensorScreen> {
     _accelerometerSubscription =
         accelerometerEvents.listen((AccelerometerEvent event) {
       setState(() {
-        _accelerometerX = event.x;
+        _accelerometerX = event.x ;
         _accelerometerY = event.y;
         _accelerometerZ = event.z;
       });
